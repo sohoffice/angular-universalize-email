@@ -32,9 +32,11 @@ Install
 Executing
 ---------
 
-    # Suppose we have a foo-email sub application and universalized as foo-email-server.
+    # Supposed we have a `foo-email` sub application, and universalized as `foo-email-server`.
     # The email to generate is located in the routing '/email/bar'.
     angular-universalize-email -a ./dist/foo-email -A ./dist/foo-email-server -o tmp '/email/bar'
+
+    # The output will be generated at tmp/email-bar.html
 
 Command line options
 --------------------
