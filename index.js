@@ -17,6 +17,29 @@ function urlToFilename(url) {
     .replace(/\//gm, '-');
 }
 
+function resolveModuleFactory(bundle, moduleName) {
+  let moduleNames;
+  if (typeof moduleName !== "undefined") {
+    moduleNames = [
+      `${moduleName}NgFactory`,
+      `${moduleName}ModuleNgFactory`,
+      `${moduleName}ServerModuleNgFactory`,
+      `${moduleName}AppServerModuleNgFactory`
+    ]
+  } else {
+    moduleNames = [
+      'AppServerModuleNgFactory'
+    ];
+  }
+  const found = moduleNames.find(name => {
+    console.log(`looking for ${name}: ${name in bundle}`);
+    return (name in bundle);
+  });
+  if (found) {
+    return bundle[found]
+  }
+}
+
 const printError = function (err) {
   console.error(err);
   process.exit(1);
@@ -31,10 +54,13 @@ const processFile = function (args) {
 
 const processFile1 = function (args) {
   const serverBundle = join(process.cwd(), args.serverAsset, args.bundle);
-  const {EmailAppServerModuleNgFactory, LAZY_MODULE_MAP} = require(serverBundle);
+  const bundle = require(serverBundle);
+
+  const {LAZY_MODULE_MAP} = bundle;
+  const ngFactory = resolveModuleFactory(bundle, args.moduleName);
   const template = fs.readFileSync(join(args.browserAsset, args.index)).toString();
 
-  return renderModuleFactory(EmailAppServerModuleNgFactory, {
+  return renderModuleFactory(ngFactory, {
     document: template,
     url: args.url,
     extraProviders: [
@@ -55,7 +81,7 @@ const processFile2 = function (args, html) {
 
   inlineCss(html, options)
     .then(function (html) {
-      const outputFile = join(args.outputDir, urlToFilename(args.url)+'.html');
+      const outputFile = join(args.outputDir, urlToFilename(args.url) + '.html');
       console.log(`Output to ${outputFile}`);
       const stripped = stripJs(html);
       fs.writeFileSync(outputFile, stripped);
@@ -105,6 +131,14 @@ parser.addArgument(
     help: 'The output directory',
     dest: 'outputDir',
     defaultValue: '.'
+  }
+);
+parser.addArgument(
+  ['-m', '--module-name'],
+  {
+    help: 'The email server module name. default to AppServerModule.',
+    dest: 'moduleName',
+    defaultValue: 'AppServerModule'
   }
 );
 parser.addArgument(

@@ -29,6 +29,14 @@ Install
 
     npm install angular-universalize-email --save-dev
 
+A executable `angular-universalize-email` will be installed to your node_modules/.bin folder.
+You may run the executable by explicitly refer to the path as `./node_modules/.bin/angular-universalize-email` or add it to your package.json as a script.
+
+    "scripts": {
+      ...
+      "gen:email": "angular-universalize-email -a ./dist/foo-email -A ./dist/foo-email-server -o tmp -m EmailAppServerModule '/email/bar'"
+    }
+
 Executing
 ---------
 
@@ -38,13 +46,17 @@ Executing
 
     # The output will be generated at tmp/email-bar.html
 
+If you have renamed your server module, use -m to specify the module name.
+
+    angular-universalize-email -a ./dist/foo-email -A ./dist/foo-email-server -o tmp -m EmailAppServerModule '/email/bar'
+
 Command line options
 --------------------
 
 ```
 usage: angular-universalize-email [-h] [-v] -a BROWSERASSET -A SERVERASSET
                                   [--bundle BUNDLE] [--index INDEX]
-                                  [-o OUTPUTDIR]
+                                  [-o OUTPUTDIR] [-m MODULENAME]
                                   url
 
 angular-universalize-email, a small utility that allows an angular project to
@@ -65,4 +77,7 @@ Optional arguments:
   --index INDEX         The entry html filename, default to index.html
   -o OUTPUTDIR, --output-dir OUTPUTDIR
                         The output directory
+  -m MODULENAME, --module-name MODULENAME
+                        The email server module name. default to
+                        AppServerModule.
 ```
