@@ -1,0 +1,98 @@
+#!/usr/bin/env node
+
+const {processAngularUniversal, processEmailable} = require('../index.js');
+
+const printError = function (err) {
+  console.error(err);
+  process.exit(1);
+};
+
+const processFile = function (args) {
+  const promise1 = processAngularUniversal(args);
+  promise1.then(html => {
+    processEmailable(args, html);
+  });
+};
+
+const ArgumentParser = require('argparse').ArgumentParser;
+
+const parser = new ArgumentParser({
+  version: '1.0.2',
+  addHelp: true,
+  description: 'angular-universalize-email, a small utility that allows an angular project to easily generate email templates using angular universal.'
+});
+parser.error = printError;
+
+parser.addArgument(
+  ['-a', '--asset'],
+  {
+    help: 'The directory contains the angular browser asset.',
+    dest: 'browserAsset',
+    required: true
+  }
+);
+parser.addArgument(
+  ['-A', '--server-asset'],
+  {
+    help: 'The directory contains the angular server asset.',
+    dest: 'serverAsset',
+    required: true
+  }
+);
+parser.addArgument(
+  ['--bundle'],
+  {
+    help: 'The angular universal server bundle name, default to `main`',
+    defaultValue: 'main'
+  }
+);
+parser.addArgument(
+  ['--index'],
+  {
+    help: 'The entry html filename, default to `index.html`',
+    defaultValue: 'index.html'
+  }
+);
+parser.addArgument(
+  ['-o', '--output-dir'],
+  {
+    help: 'The output directory',
+    dest: 'outputDir',
+    defaultValue: '.'
+  }
+);
+parser.addArgument(
+  ['-m', '--module-name'],
+  {
+    help: 'The email server module name. default to `AppServerModule`.',
+    dest: 'moduleName',
+    defaultValue: 'AppServerModule'
+  }
+);
+parser.addArgument(
+  ['-p', '--pattern'],
+  {
+    help: 'The output file pattern, url can be used as a substitute variable. Example: `prefix-{dashed}.html` or `{camel}.scala.html`.\n' +
+      'Currently only camel and dashed conversion are supported.',
+    dest: 'pattern',
+    defaultValue: '{dashed}.html'
+  }
+);
+parser.addArgument(
+  ['--prepend'],
+  {
+    help: 'Additional text to be added in the beginning of generated html. Useful if generated for other framework.',
+    dest: 'prepend'
+  }
+);
+parser.addArgument(
+  'url', {
+    help: 'The url path to generate current email.'
+  }
+);
+
+const args = parser.parseArgs();
+// console.dir(args);
+
+processFile(args);
+

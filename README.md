@@ -56,7 +56,8 @@ Command line options
 ```
 usage: angular-universalize-email [-h] [-v] -a BROWSERASSET -A SERVERASSET
                                   [--bundle BUNDLE] [--index INDEX]
-                                  [-o OUTPUTDIR] [-m MODULENAME]
+                                  [-o OUTPUTDIR] [-m MODULENAME] [-p PATTERN]
+                                  [-P PREPEND]
                                   url
 
 angular-universalize-email, a small utility that allows an angular project to
@@ -73,11 +74,43 @@ Optional arguments:
   -A SERVERASSET, --server-asset SERVERASSET
                         The directory contains the angular server asset.
   --bundle BUNDLE       The angular universal server bundle name, default to
-                        main
-  --index INDEX         The entry html filename, default to index.html
+                        `main`
+  --index INDEX         The entry html filename, default to `index.html`
   -o OUTPUTDIR, --output-dir OUTPUTDIR
                         The output directory
   -m MODULENAME, --module-name MODULENAME
                         The email server module name. default to
-                        AppServerModule.
+                        `AppServerModule`.
+  -p PATTERN, --pattern PATTERN
+                        The output file pattern, url can be used as a
+                        substitute variable. Example: `prefix-{dashed}.html`
+                        or `{camel}.scala.html`. Currently only camel and
+                        dashed conversion are supported.
+  --prepend PREPEND     Additional text to be added in the beginning of
+                        generated html. Useful if generated for other
+                        framework.
 ```
+
+Advanced usage
+--------------
+
+#### Prepend text
+
+If you are generating email template for other framework, you may want to prepend some text before the generated html.
+
+For example, to generated a template for play framework(java/scala), something similar to the below may be required:
+
+    @(user: io.User, link: String)
+
+In which case, use the --prepend argument to instruct 'angular-universalize-email' to add such line in the beginning.
+
+#### Filename pattern
+
+The default filename is '{dashed}.html'. What does this mean exactly ?
+
+The URL used to generate current template will be converted into dashed string. For example: /email/foo-bar will be converted
+as `email-foo-bar`. This converted value is substituted into this pattern to make the result: `email-foo-bar.html`.
+
+You may also use `camel` conversion, the below example will be converted into `emailFooBar.html`.
+
+At the moment, dashed and camel are the only supported conversions.

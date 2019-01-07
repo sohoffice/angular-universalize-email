@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 const {join} = require('path');
 const fs = require('fs');
 
@@ -7,14 +6,53 @@ require(join(process.cwd(), 'node_modules', 'zone.js/dist/zone-node'));
 require(join(process.cwd(), 'node_modules', 'reflect-metadata'));
 const {renderModuleFactory} = require(join(process.cwd(), 'node_modules', '@angular/platform-server'));
 const {provideModuleMap} = require(join(process.cwd(), 'node_modules', '@nguniversal/module-map-ngfactory-loader'));
-
-const ArgumentParser = require('argparse').ArgumentParser;
 const inlineCss = require('inline-css');
 const stripJs = require('strip-js');
 
-function urlToFilename(url) {
-  return url.replace(/^\/+/gm, '')
-    .replace(/\//gm, '-');
+const _converters = {
+  'dashed': function (url) {
+    return url.replace(/^\/+/gm, '')
+      .replace(/\//gm, '-');
+  },
+  'camel': function (url) {
+    const parts = url.replace(/^\/+/gm, '').split(/[\/-]/);
+    let s = "";
+    if (parts.length >= 1) {
+      s += parts[0];
+    }
+    for (let i = 1; i < parts.length; i++) {
+      if (parts[i].length > 0) {
+        s += (parts[i][0].toUpperCase() + parts[i].substr(1));
+      }
+    }
+    return s;
+  }
+};
+
+const _reFilename = /^.*\{(dashed|camel)\}.*$/;
+const _reFilenameToReplace = /\{(dashed|camel)\}/;
+
+/**
+ * Convert the url into a filename, according to the given pattern.
+ *
+ * The pattern support one variable to be substituted with url (after conversion)
+ * The basic format is: `{dashed|camel}`
+ *
+ * @param pattern
+ * @param url
+ */
+function urlToFilename(pattern, url) {
+  const m = _reFilename.exec(pattern);
+  let cv;
+  if (m) {
+    cv = _converters[m[1]];
+  } else {
+    console.error(`Not a supported filename pattern. ${pattern}, the conversion must be dashed or camel. dashed is used as a fallback.`);
+    cv = _converters.dashed;
+  }
+
+  const converted = cv(url);
+  return pattern.replace(_reFilenameToReplace, converted);
 }
 
 function resolveModuleFactory(bundle, moduleName) {
@@ -32,7 +70,7 @@ function resolveModuleFactory(bundle, moduleName) {
     ];
   }
   const found = moduleNames.find(name => {
-    console.log(`looking for ${name}: ${name in bundle}`);
+    console.log(`looking for ${name}: ${(name in bundle) ? 'Found' : 'Not found'}`);
     return (name in bundle);
   });
   if (found) {
@@ -40,19 +78,18 @@ function resolveModuleFactory(bundle, moduleName) {
   }
 }
 
-const printError = function (err) {
-  console.error(err);
-  process.exit(1);
-};
-
-const processFile = function (args) {
-  const promise1 = processFile1(args);
-  promise1.then(html => {
-    processFile2(args, html);
-  });
-};
-
-const processFile1 = function (args) {
+/**
+ * Use angular universal to generate one html.
+ *
+ * @param args {object}
+ * @param args.serverAsset {string} The path that point to server asset directory, relative to current working directory.
+ * @param args.bundle {string} The server bundle name, usually 'main'.
+ * @param args.moduleName {string} The entry module of angular universal application, usually 'AppServerModule'
+ * @param args.browserAsset {string} The path that point to browser asset directory, relative to current working directory.
+ * @param args.index {string} The main html file of angular universal application, usually 'index.html'.
+ * @param args.url {string} The routing path that point to the email to be generated.
+ */
+const processAngularUniversal = function (args) {
   const serverBundle = join(process.cwd(), args.serverAsset, args.bundle);
   const bundle = require(serverBundle);
 
@@ -69,10 +106,31 @@ const processFile1 = function (args) {
   });
 };
 
-const processFile2 = function (args, html) {
+/**
+ * Convert the html into an html that can be emailed.
+ *
+ * The below are performed:
+ * - CSS are inlined.
+ * - Html are sanitized.
+ * - script tags are stripped.
+ *
+ * @param args {object}
+ * @param args.serverAsset {string} The path that point to server asset directory, relative to current working directory.
+ * @param args.bundle {string} The server bundle name, usually 'main'.
+ * @param args.moduleName {string} The entry module of angular universal application, usually 'AppServerModule'
+ * @param args.browserAsset {string} The path that point to browser asset directory, relative to current working directory.
+ * @param args.index {string} The main html file of angular universal application, usually 'index.html'.
+ * @param args.url {string} The routing path that point to the email to be generated.
+ * @param args.outputDir {string} The directory where we put the generated html.
+ * @param args.pattern {string} The pattern to generate output filename. Support one substitute variable to insert email routing URL.
+ *                              The routing can be converted with either dashed or camel conversion method.
+ * @param [args.prepend] {string} Optionally add text in the beginning of the generated file. The prepend text will be followed by line breaks.
+ * @param html {string} The generated raw html file to be processed.
+ */
+const processEmailable = function (args, html) {
   const path = fs.realpathSync(args.browserAsset);
 
-  console.log(`Current directory: ${process.cwd()}, path: ${path}, output: ${args.outputDir}`);
+  console.log(`| Current directory: ${process.cwd()}.\n| Browser asset path: ${path}.\n| Output to: ${args.outputDir}`);
   const options = {
     removeStyleTags: true,
     removeLinkTags: true,
@@ -81,74 +139,19 @@ const processFile2 = function (args, html) {
 
   inlineCss(html, options)
     .then(function (html) {
-      const outputFile = join(args.outputDir, urlToFilename(args.url) + '.html');
-      console.log(`Output to ${outputFile}`);
-      const stripped = stripJs(html);
+      let fn = urlToFilename(args.pattern, args.url);
+      const outputFile = join(args.outputDir, fn);
+      console.log(`| Filename: ${fn}`);
+      let stripped = stripJs(html);
+      if (args.prepend!==null && typeof args.prepend !== 'undefined') {
+        console.log(`| Prepend line: ${args.prepend}`);
+        stripped = args.prepend + '\n\n' + stripped;
+      }
       fs.writeFileSync(outputFile, stripped);
     });
 };
 
-const parser = new ArgumentParser({
-  version: '0.0.1',
-  addHelp: true,
-  description: 'angular-universalize-email, a small utility that allows an angular project to easily generate email templates using angular universal.'
-});
-parser.error = printError;
-
-parser.addArgument(
-  ['-a', '--asset'],
-  {
-    help: 'The directory contains the angular browser asset.',
-    dest: 'browserAsset',
-    required: true
-  }
-);
-parser.addArgument(
-  ['-A', '--server-asset'],
-  {
-    help: 'The directory contains the angular server asset.',
-    dest: 'serverAsset',
-    required: true
-  }
-);
-parser.addArgument(
-  ['--bundle'],
-  {
-    help: 'The angular universal server bundle name, default to main',
-    defaultValue: 'main'
-  }
-);
-parser.addArgument(
-  ['--index'],
-  {
-    help: 'The entry html filename, default to index.html',
-    defaultValue: 'index.html'
-  }
-);
-parser.addArgument(
-  ['-o', '--output-dir'],
-  {
-    help: 'The output directory',
-    dest: 'outputDir',
-    defaultValue: '.'
-  }
-);
-parser.addArgument(
-  ['-m', '--module-name'],
-  {
-    help: 'The email server module name. default to AppServerModule.',
-    dest: 'moduleName',
-    defaultValue: 'AppServerModule'
-  }
-);
-parser.addArgument(
-  'url', {
-    help: 'The url path to generate current email.'
-  }
-);
-
-const args = parser.parseArgs();
-console.dir(args);
-
-processFile(args);
-
+module.exports = {
+  processAngularUniversal: processAngularUniversal,
+  processEmailable: processEmailable
+};
