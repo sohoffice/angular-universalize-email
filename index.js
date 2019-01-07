@@ -95,7 +95,7 @@ const processAngularUniversal = function (args) {
 
   const {LAZY_MODULE_MAP} = bundle;
   const ngFactory = resolveModuleFactory(bundle, args.moduleName);
-  const template = fs.readFileSync(join(args.browserAsset, args.index)).toString();
+  const template = fs.readFileSync(join(process.cwd(), args.browserAsset, args.index)).toString();
 
   return renderModuleFactory(ngFactory, {
     document: template,
@@ -134,6 +134,7 @@ const processEmailable = function (args, html) {
   const options = {
     removeStyleTags: true,
     removeLinkTags: true,
+    removeHtmlSelectors: true,
     url: `file:///${path}/`
   };
 

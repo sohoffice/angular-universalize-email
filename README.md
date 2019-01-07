@@ -4,7 +4,9 @@ Use angular universal to generate email templates
 angular-universalize-email is a small utility that allows an angular project to easily generate email templates using angular universal.
 
 Basically you create emails just like you create any other angular pages. Don't worry about the styles and scripts, it will be taken care
-by the script.
+by the angular-universalize-email.
+
+The module heavily relies on [inline-css](https://www.npmjs.com/package/inline-css) and [strip-js](https://www.npmjs.com/package/strip-js) to work.
 
 Prerequisites
 -------------
@@ -14,14 +16,14 @@ Prerequisites
 3. You have created your email templates using angular
 4. These email templates must have routing defined.
 
-To make life easier, I'll recommend you separate your primary angular project with your email template angular project. Most of the time,
-the emails are not needed by the primary angular project, so it's a good idea not to mix them together.
+To make life easier, I'll recommend you separate your primary angular project with your email template project. Most of the time,
+the email pages are not needed by the primary angular project, so it's a good idea not to mix them together.
 
 With angular 7+, it's as easy as executing the below to create a new sub-project.
 
     ng generate application <application name>
 
-You can universalize this sub-project the same way you universalize the primary application. Check
+You will have to universalize this sub-project the same way you universalize the primary application. Check
 [this guide](https://medium.com/@sohoffice/angular-universal-an-adventure-9d969d401072) should you require a reference.
 
 Install
@@ -29,13 +31,24 @@ Install
 
     npm install angular-universalize-email --save-dev
 
-A executable `angular-universalize-email` will be installed to your node_modules/.bin folder.
+An executable `angular-universalize-email` will be installed to your node_modules/.bin folder.
 You may run the executable by explicitly refer to the path as `./node_modules/.bin/angular-universalize-email` or add it to your package.json as a script.
 
     "scripts": {
       ...
       "gen:email": "angular-universalize-email -a ./dist/foo-email -A ./dist/foo-email-server -o tmp -m EmailAppServerModule '/email/bar'"
     }
+
+If you do not have scripts to build the email application yet, add the below to the scripts section:
+
+    "scripts": {
+      ...
+      "build:email": "ng build --extract-css --project foo-email && ng run foo-email:server",
+    }
+
+The `--extract-css` is critical here, make sure you always use this flag or the `--prod` (which includes the extract-css flag).
+When none of these flags are used, angular will be built in development mode which build the style into a js file. Obviously `inline-css` can not handle
+the js.
 
 Executing
 ---------
@@ -102,15 +115,27 @@ For example, to generated a template for play framework(java/scala), something s
 
     @(user: io.User, link: String)
 
-In which case, use the --prepend argument to instruct 'angular-universalize-email' to add such line in the beginning.
+In which case, use the --prepend argument to instruct angular-universalize-email to add such line in the beginning.
 
 #### Filename pattern
 
 The default filename is '{dashed}.html'. What does this mean exactly ?
 
 The URL used to generate current template will be converted into dashed string. For example: /email/foo-bar will be converted
-as `email-foo-bar`. This converted value is substituted into this pattern to make the result: `email-foo-bar.html`.
+as `email-foo-bar`. This converted value is substituted into the pattern to make the result: `email-foo-bar.html`.
 
 You may also use `camel` conversion, the same example will be converted into `emailFooBar.html`.
 
 At the moment, dashed and camel are the only supported conversions.
+
+Troubleshooting
+---------------
+
+#### TypeError: Cannot read property 'moduleType' of undefined
+
+This means your email-server application name is incorrect. The default is AppServerModule, but you may have renamed the module.
+Use `-m` flag to tell angular-universalize-email the entry module name of your email server application.
+
+#### Missing most of the styles
+
+You may not have built the email application with --extract-css flag. This is critical for inline-css to work.

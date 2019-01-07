@@ -17,7 +17,7 @@ const processFile = function (args) {
 const ArgumentParser = require('argparse').ArgumentParser;
 
 const parser = new ArgumentParser({
-  version: '1.0.2',
+  version: '1.0.3',
   addHelp: true,
   description: 'angular-universalize-email, a small utility that allows an angular project to easily generate email templates using angular universal.'
 });
