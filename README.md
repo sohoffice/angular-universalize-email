@@ -111,6 +111,6 @@ The default filename is '{dashed}.html'. What does this mean exactly ?
 The URL used to generate current template will be converted into dashed string. For example: /email/foo-bar will be converted
 as `email-foo-bar`. This converted value is substituted into this pattern to make the result: `email-foo-bar.html`.
 
-You may also use `camel` conversion, the below example will be converted into `emailFooBar.html`.
+You may also use `camel` conversion, the same example will be converted into `emailFooBar.html`.
 
 At the moment, dashed and camel are the only supported conversions.
