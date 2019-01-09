@@ -8,6 +8,7 @@ const {renderModuleFactory} = require(join(process.cwd(), 'node_modules', '@angu
 const {provideModuleMap} = require(join(process.cwd(), 'node_modules', '@nguniversal/module-map-ngfactory-loader'));
 const inlineCss = require('inline-css');
 const stripJs = require('strip-js');
+const {sanitizeHtml} = require('./lib/sanitize-html');
 
 const _converters = {
   'dashed': function (url) {
@@ -81,13 +82,13 @@ function resolveModuleFactory(bundle, moduleName) {
 /**
  * Use angular universal to generate one html.
  *
- * @param args {object}
- * @param args.serverAsset {string} The path that point to server asset directory, relative to current working directory.
- * @param args.bundle {string} The server bundle name, usually 'main'.
- * @param args.moduleName {string} The entry module of angular universal application, usually 'AppServerModule'
- * @param args.browserAsset {string} The path that point to browser asset directory, relative to current working directory.
- * @param args.index {string} The main html file of angular universal application, usually 'index.html'.
- * @param args.url {string} The routing path that point to the email to be generated.
+ * @param {object} args
+ * @param {string} args.serverAsset The path that point to server asset directory, relative to current working directory.
+ * @param {string} args.bundle The server bundle name, usually 'main'.
+ * @param {string} args.moduleName The entry module of angular universal application, usually 'AppServerModule'
+ * @param {string} args.browserAsset The path that point to browser asset directory, relative to current working directory.
+ * @param {string} args.index The main html file of angular universal application, usually 'index.html'.
+ * @param {string} args.url The routing path that point to the email to be generated.
  */
 const processAngularUniversal = function (args) {
   const serverBundle = join(process.cwd(), args.serverAsset, args.bundle);
@@ -114,18 +115,19 @@ const processAngularUniversal = function (args) {
  * - Html are sanitized.
  * - script tags are stripped.
  *
- * @param args {object}
- * @param args.serverAsset {string} The path that point to server asset directory, relative to current working directory.
- * @param args.bundle {string} The server bundle name, usually 'main'.
- * @param args.moduleName {string} The entry module of angular universal application, usually 'AppServerModule'
- * @param args.browserAsset {string} The path that point to browser asset directory, relative to current working directory.
- * @param args.index {string} The main html file of angular universal application, usually 'index.html'.
- * @param args.url {string} The routing path that point to the email to be generated.
- * @param args.outputDir {string} The directory where we put the generated html.
- * @param args.pattern {string} The pattern to generate output filename. Support one substitute variable to insert email routing URL.
+ * @param {object} args
+ * @param {string} args.serverAsset The path that point to server asset directory, relative to current working directory.
+ * @param {string} args.bundle The server bundle name, usually 'main'.
+ * @param {string} args.moduleName The entry module of angular universal application, usually 'AppServerModule'
+ * @param {string} args.browserAsset The path that point to browser asset directory, relative to current working directory.
+ * @param {string} args.index The main html file of angular universal application, usually 'index.html'.
+ * @param {string} args.url The routing path that point to the email to be generated.
+ * @param {string} args.outputDir The directory where we put the generated html.
+ * @param {string} args.pattern The pattern to generate output filename. Support one substitute variable to insert email routing URL.
  *                              The routing can be converted with either dashed or camel conversion method.
- * @param [args.prepend] {string} Optionally add text in the beginning of the generated file. The prepend text will be followed by line breaks.
- * @param html {string} The generated raw html file to be processed.
+ * @param {string} [args.prepend] Optionally add text in the beginning of the generated file. The prepend text will be followed by line breaks.
+ * @param {string} [args.convertTags] Optionally instruct the application to convert exotic tags. The value will be the new tag to be converted to.
+ * @param {string} html The generated raw html file to be processed.
  */
 const processEmailable = function (args, html) {
   const path = fs.realpathSync(args.browserAsset);
@@ -134,7 +136,7 @@ const processEmailable = function (args, html) {
   const options = {
     removeStyleTags: true,
     removeLinkTags: true,
-    removeHtmlSelectors: true,
+    // removeHtmlSelectors: true,
     url: `file:///${path}/`
   };
 
@@ -143,12 +145,17 @@ const processEmailable = function (args, html) {
       let fn = urlToFilename(args.pattern, args.url);
       const outputFile = join(args.outputDir, fn);
       console.log(`| Filename: ${fn}`);
-      let stripped = stripJs(html);
+      let result = stripJs(html);
       if (args.prepend!==null && typeof args.prepend !== 'undefined') {
         console.log(`| Prepend line: ${args.prepend}`);
-        stripped = args.prepend + '\n\n' + stripped;
+        result = args.prepend + '\n\n' + result;
       }
-      fs.writeFileSync(outputFile, stripped);
+      if (typeof args.convertTags === 'string') {
+        result = sanitizeHtml(result, {
+          replaceWith: args.convertTags
+        });
+      }
+      fs.writeFileSync(outputFile, result);
     });
 };
 

@@ -74,7 +74,7 @@ usage: angular-universalize-email [-h] [-v] -a BROWSERASSET -A SERVERASSET
                                   url
 
 angular-universalize-email, a small utility that allows an angular project to
-easily generate email templates using angular universal.
+generate email templates using angular universal.
 
 Positional arguments:
   url                   The url path to generate current email.
@@ -102,6 +102,12 @@ Optional arguments:
   --prepend PREPEND     Additional text to be added in the beginning of
                         generated html. Useful if generated for other
                         framework.
+  --convert-exotic-tags CONVERTTAGS
+                        Convert non-standard tags with a standard one.
+                        Default is `div`.
+  --no-convert-exotic-tags
+                        Do not convert non-standard tags. Note, they may be
+                        skipped by some email clients.
 ```
 
 Advanced usage
@@ -128,6 +134,30 @@ You may also use `camel` conversion, the same example will be converted into `em
 
 At the moment, dashed and camel are the only supported conversions.
 
+#### Work with template engine
+
+Take the scala template of play framework for example, your component html may look like this.
+
+    <mat-card>
+      <div class="mat-card-header mb-5">
+        <mat-toolbar class="mat-primary mat-elevation-z6 align-content-stretch align-items-center w-100">
+          <img src="https://some.lo.go/" height="64" width="64">
+        </mat-toolbar>
+      </div>
+      <div class="mat-card-content">
+        <p>Hi @user.name:</p>
+
+        <p>Click the below link to verify your email.</p>
+
+        <p>
+          <a href="@link" mat-raised-button color="primary">Verify</a>
+        </p>
+
+      </div>
+    </mat-card>
+
+The `@user.name` and `@link` are where variable substitution happens.
+
 Troubleshooting
 ---------------
 
@@ -139,3 +169,51 @@ Use `-m` flag to tell angular-universalize-email the entry module name of your e
 #### Missing most of the styles
 
 You may not have built the email application with --extract-css flag. This is critical for inline-css to work.
+
+#### My custom tags become div !
+
+This is intentional, since non-standard tags are ignored by Gmail.
+If you don't like this behavior, use the --no-convert-exotic-tags flag to turn this feature off.
+
+#### My box-shadow is not working on Gmail
+
+Some CSS styles are simply not supported by Gmail. To name a few: box-shadow, position etc...
+
+If your component use these styles, we'll have to get around it. I've included a styles.css.
+It may be included in your styles.scss file like the below:
+
+    @import "~angular-universalize-email/styles.css";
+
+To use the styles, please make sure you add `nu-email` to your top level element. Nevertheless,
+the only thing this style file provide is adding a border onto .mat-card.
+There'is definitely a better way to do this, **any contributions is appreciated**.
+
+#### My template engine use braces.
+
+Braces are the basic element of programming language, and is the cornerstone of many template engines.
+Mustache for example, use double braces to do interpolation. Unfortunately
+double braces were used by Angular, and it won't make it through to the generated template.
+Angular also do not like single braces, so you may not use things like
+`@if(someCondition) { ... }`.
+
+For the moment, you can get around it by adding the below variables to your page component:
+
+    class SomeComponent {
+      LDB = '{{';
+      RDB = '}}';
+      LB = '{';
+      RB = '}';
+    }
+
+And use them in your html like this:
+
+    <my-foo-component>
+      {{LDB}} user.name {{RDB}}
+    </my-foo-component>
+
+The next version will add support for braces, so you don't have to define the variables by yourself.
+The idea is add syntax like the below.
+
+    <my-foo-component>
+      <nue:DB> user.name </nue:DB>
+    </my-foo-component>

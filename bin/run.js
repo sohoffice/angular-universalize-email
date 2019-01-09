@@ -17,9 +17,9 @@ const processFile = function (args) {
 const ArgumentParser = require('argparse').ArgumentParser;
 
 const parser = new ArgumentParser({
-  version: '1.0.3',
+  version: '1.0.4',
   addHelp: true,
-  description: 'angular-universalize-email, a small utility that allows an angular project to easily generate email templates using angular universal.'
+  description: 'angular-universalize-email, a small utility that allows an angular project to generate email templates using angular universal.'
 });
 parser.error = printError;
 
@@ -85,6 +85,23 @@ parser.addArgument(
     dest: 'prepend'
   }
 );
+parser.addArgument(
+  ['--convert-exotic-tags'],
+  {
+    help: 'Convert non-standard tags with a standard one. Default is `div`.',
+    dest: 'convertTags',
+    defaultValue: 'div'
+  }
+);
+parser.addArgument(
+  ['--no-convert-exotic-tags'],
+  {
+    help: 'Do not convert non-standard tags. Note, they may be skipped by some email clients.',
+    dest: 'convertTags',
+    action: 'storeFalse'
+  }
+);
+
 parser.addArgument(
   'url', {
     help: 'The url path to generate current email.'
