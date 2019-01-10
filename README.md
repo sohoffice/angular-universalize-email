@@ -94,7 +94,7 @@ If you want to use nue-extension tags (you mostly would), please follow the belo
 
 The `@user.name` and `@link` is where variable substitution happens.
 
-@if(anonymous) is a conditional statement while &lt;nue-b&gt;&lt;/nue-b&gt; will be replaced as { and }.
+@if(anonymous) is a conditional statement while &lt;nue-b&gt;&lt;/nue-b&gt; will be replaced by { and }.
 
 
 nue-extension Tags
@@ -119,7 +119,7 @@ To use these extension tags, you must first change your email application's Angu
       ]
     })
 
-These extensions can be placed inside templates, and usually used in pair. For example:
+These extension tags can be placed inside templates, and usually used in pair. For example:
 
     <nue-db> user.name </nue-db>
 
@@ -180,6 +180,18 @@ It may be included in your styles.scss file like the below:
 To use the styles, please make sure you add `nue-email` to your top level element.
 Don't expect too much, the only thing this style file provides is adding a border onto .mat-card.
 There is definitely a better way to do this, **any contributions is appreciated**.
+
+#### My mat-button breaks my p
+
+mat-button will be expanded to include some div. And div, can not exist in p, that's why the display were broken.
+
+    # The below buttons will be displayed in two rows, not side by side.
+    <p>
+      <a href="#" mat-button>Foo</a>
+      <a href="#" mat-button>Bar</a>
+    </p>
+
+Try replace p with a container div to fix the issue.
 
 #### My template engine use braces.
 
