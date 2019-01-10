@@ -93,4 +93,9 @@ describe('sanitize-html', () => {
     const html = '<nue-aq><nue-ab> something </nue-ab></nue-aq>';
     expect(sanitizeHtml(html)).toEqual("<< something >>");
   });
+
+  it('should handle slash in attributes', () => {
+    const html = '<foo style="font:foo/font;"> something </foo>'
+    expect(sanitizeHtml(html)).toEqual('<div style="font:foo/font;"> something </div>');
+  })
 });
