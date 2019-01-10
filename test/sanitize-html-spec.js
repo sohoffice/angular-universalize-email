@@ -34,6 +34,11 @@ describe('sanitize-html', () => {
     expect(sanitizeHtml(html)).toEqual('<div><div></div></div>');
   });
 
+  it('will not be bothered by additional >', () => {
+    const html = '<foo>some > inside</foo>';
+    expect(sanitizeHtml(html)).toEqual('<div>some > inside</div>');
+  });
+
   it('should handle data with &lt;', () => {
     const html = '<foo>some &lt; inside</foo>';
     expect(sanitizeHtml(html)).toEqual('<div>some &lt; inside</div>');
@@ -49,9 +54,9 @@ describe('sanitize-html', () => {
   it('should support replaceWith option', () => {
     const html = '<foo></foo><bar></bar><baz></baz>';
     expect(sanitizeHtml(html, {
-      replaceWith: function (s) {
-        if (s === 'foo') return 'span';
-        if (s === 'bar') return s;
+      replaceWith: function (tagData) {
+        if (tagData.tag === 'foo') return 'span';
+        if (tagData.tag === 'bar') return tagData.tag;
         return 'div';
       }
     })).toEqual('<span></span><bar></bar><div></div>');
@@ -62,5 +67,30 @@ describe('sanitize-html', () => {
     expect(sanitizeHtml(html, {
       replaceWith: 'span'
     })).toEqual('<span></span>');
+  });
+
+  it('should support nue:db tag replace', () => {
+    const html = '<nue-db> something </nue-db>';
+    expect(sanitizeHtml(html)).toEqual('{{ something }}');
+  });
+
+  it('should support nue:b tag replace', () => {
+    const html = '<nue-b> something </nue-b>';
+    expect(sanitizeHtml(html)).toEqual('{ something }');
+  });
+
+  it('should support nue:dq tag replace', () => {
+    const html = '<nue-dq> something </nue-dq>';
+    expect(sanitizeHtml(html)).toEqual('" something "');
+  });
+
+  it('should support nue:q tag replace', () => {
+    const html = '<nue-q> something </nue-q>';
+    expect(sanitizeHtml(html)).toEqual("' something '");
+  });
+
+  it('should support nue:aq and nue:ab tag replace', () => {
+    const html = '<nue-aq><nue-ab> something </nue-ab></nue-aq>';
+    expect(sanitizeHtml(html)).toEqual("<< something >>");
   });
 });

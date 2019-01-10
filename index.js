@@ -136,7 +136,7 @@ const processEmailable = function (args, html) {
   const options = {
     removeStyleTags: true,
     removeLinkTags: true,
-    // removeHtmlSelectors: true,
+    removeHtmlSelectors: true,
     url: `file:///${path}/`
   };
 

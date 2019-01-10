@@ -1,6 +1,6 @@
 {
   "name": "angular-universalize-email",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Use angular universal to generate email templates",
   "main": "index.js",
   "homepage": "https://github.com/sohoffice/angular-universalize-email",
