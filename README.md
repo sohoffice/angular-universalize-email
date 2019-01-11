@@ -172,18 +172,19 @@ If you don't like this behavior, use the --no-convert-exotic-tags flag to turn t
 
 Some CSS styles are simply not supported by Gmail. To name a few: box-shadow, position, negative margins etc...
 
-If your component use these styles, we'll have to get around it. I've included a styles.css.
-It may be included in your styles.scss file like the below:
+If your component use these styles, you'll have to get around it.
+I've included a styles.css, which may be included in your styles.scss file like the below:
 
     @import "~angular-universalize-email/styles.css";
 
-To use the styles, please make sure you add `nue-email` to your top level element.
-Don't expect too much, the only thing this style file provides is adding a border onto .mat-card.
+To use the styles, you'll also need to add `nue-email` to your top level element.
+
+Don't expect too much, the only thing this style file provides is adding a border onto several material components, including .mat-card.
 There is definitely a better way to do this, **any contributions is appreciated**.
 
 #### My mat-button breaks my p
 
-mat-button will be expanded to include some div. And div, can not exist in p, that's why the display were broken.
+mat-button will be expanded into multiple elements, which includes several div. However, div can not exist inside p, that's why the display was broken.
 
     # The below buttons will be displayed in two rows, not side by side.
     <p>
@@ -191,7 +192,12 @@ mat-button will be expanded to include some div. And div, can not exist in p, th
       <a href="#" mat-button>Bar</a>
     </p>
 
-Try replace p with a container div to fix the issue.
+Try replace p with a div to fix the issue.
+
+#### My mat-icons (or other icons) weren't showing.
+
+I've tried both the SVG and iconfont approach in Gmail. Unfortunately, SVG tags were removed and iconfont was not loaded.
+If you want to use icons, you may have to fallback to bitmap-based formats (png, jpg, etc.).
 
 #### My template engine use braces.
 
