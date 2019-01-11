@@ -32,6 +32,7 @@ const _converters = {
 
 const _reFilename = /^.*\{(dashed|camel)\}.*$/;
 const _reFilenameToReplace = /\{(dashed|camel)\}/;
+const _reEmptyStyleTag = /<\s*style(| [^>]*)\s*>\s*<\s*\/style\s*>/gm;
 
 /**
  * Convert the url into a filename, according to the given pattern.
@@ -108,6 +109,16 @@ const processAngularUniversal = function (args) {
 };
 
 /**
+ * Remove empty style tag from html.
+ *
+ * @param html The html produced by previous step
+ * @return {string} The html after processing.
+ */
+const processAngularUniversalHtml = function (html) {
+  return html.replace(_reEmptyStyleTag, '');
+};
+
+/**
  * Convert the html into an html that can be emailed.
  *
  * The below are performed:
@@ -127,6 +138,7 @@ const processAngularUniversal = function (args) {
  *                              The routing can be converted with either dashed or camel conversion method.
  * @param {string} [args.prepend] Optionally add text in the beginning of the generated file. The prepend text will be followed by line breaks.
  * @param {string} [args.convertTags] Optionally instruct the application to convert exotic tags. The value will be the new tag to be converted to.
+ * @param {boolean} [args.debug] Whether to print angular universal rendered output.
  * @param {string} html The generated raw html file to be processed.
  */
 const processEmailable = function (args, html) {
@@ -146,7 +158,7 @@ const processEmailable = function (args, html) {
       const outputFile = join(args.outputDir, fn);
       console.log(`| Filename: ${fn}`);
       let result = stripJs(html);
-      if (args.prepend!==null && typeof args.prepend !== 'undefined') {
+      if (args.prepend !== null && typeof args.prepend !== 'undefined') {
         console.log(`| Prepend line: ${args.prepend}`);
         result = args.prepend + '\n\n' + result;
       }
@@ -161,5 +173,6 @@ const processEmailable = function (args, html) {
 
 module.exports = {
   processAngularUniversal: processAngularUniversal,
+  processAngularUniversalHtml: processAngularUniversalHtml,
   processEmailable: processEmailable
 };

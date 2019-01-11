@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const {processAngularUniversal, processEmailable} = require('../index.js');
+const {processAngularUniversal, processEmailable, processAngularUniversalHtml} = require('../index.js');
 
 const printError = function (err) {
   console.error(err);
@@ -10,7 +10,11 @@ const printError = function (err) {
 const processFile = function (args) {
   const promise1 = processAngularUniversal(args);
   promise1.then(html => {
-    processEmailable(args, html);
+    if (args.debug) {
+      console.log('Angular universal output:\n------\n\n', html, '\n\n------\n');
+    }
+    const html2 = processAngularUniversalHtml(html);
+    processEmailable(args, html2);
   });
 };
 
@@ -99,6 +103,15 @@ parser.addArgument(
     help: 'Do not convert non-standard tags. Note, they may be skipped by some email clients.',
     dest: 'convertTags',
     action: 'storeFalse'
+  }
+);
+parser.addArgument(
+  ['--debug'],
+  {
+    help: 'Print debug message to assist the diagnosis',
+    dest: 'debug',
+    defaultValue: false,
+    action: 'storeTrue'
   }
 );
 
