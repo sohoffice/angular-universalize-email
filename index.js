@@ -130,9 +130,11 @@ const processAngularUniversal = function (args) {
  * @param {string} html The generated raw html file to be processed.
  */
 const processEmailable = function (args, html) {
-  const path = fs.realpathSync(args.browserAsset);
+  let path = fs.realpathSync(args.browserAsset);
 
   console.log(`| Current directory: ${process.cwd()}.\n| Browser asset path: ${path}.\n| Output to: ${args.outputDir}`);
+  if (path.match("^\\w:\\\\")) // Allows working on Windows
+    path = path.substr(3);
   const options = {
     removeStyleTags: true,
     removeLinkTags: true,
