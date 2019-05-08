@@ -149,7 +149,7 @@ const processEmailable = function (args, html) {
     removeStyleTags: true,
     removeLinkTags: true,
     removeHtmlSelectors: true,
-    url: `file:///${path}/`
+    url: `file://${path}/`
   };
 
   inlineCss(html, options)
